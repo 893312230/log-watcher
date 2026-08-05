@@ -1,0 +1,399 @@
+# 日志级别种子训练数据（阶段十五 ADR-019）
+# 格式：LEVEL<TAB>单行日志文本；# 开头为注释
+# 组织纪律：每个故障族 3 个共享关键短语的改写；跨类碰撞词
+# （lock/replication/vacuum/full/timeout/snapshot）在每类均有对应变体，
+# 保证留出集样本的判别特征在训练集中出现
+ERROR	Connection refused by remote host
+ERROR	Connection refused when calling upstream
+ERROR	Connection refused: retry exhausted
+ERROR	Connection reset by peer
+ERROR	Connection reset during tls read
+ERROR	Connection reset while streaming response
+ERROR	Read timed out waiting for upstream
+ERROR	Connection timed out connecting to redis
+ERROR	Request timed out waiting for inventory-service
+ERROR	No route to host db-02
+ERROR	No route to host 172.18.0.5
+ERROR	Host unreachable after 3 attempts
+ERROR	Disk full on /var/lib/mysql, writes blocked
+ERROR	No space left on device writing binlog
+ERROR	df reports / at 100% capacity, writes blocked
+ERROR	Permission denied opening secret.key
+ERROR	Permission denied writing to /var/log/app
+ERROR	Access denied for user svc-backup
+ERROR	java process killed by OOM killer
+ERROR	Out of memory: Kill process 2281 (java)
+ERROR	Container killed by OOM killer, exit code 137
+ERROR	Upstream returned 502 Bad Gateway
+ERROR	Service unavailable: 503 from payment-service
+ERROR	Gateway timeout 504 waiting for inventory
+ERROR	Deadlock detected between two worker threads
+ERROR	Deadlock victim transaction rolled back
+ERROR	Deadlock found when trying to get lock
+ERROR	Message queue full, producer blocked
+ERROR	Queue full: pending messages, producer blocked
+ERROR	Producer blocked: queue full on topic orders
+ERROR	Broken pipe writing to client socket
+ERROR	Broken pipe during response streaming
+ERROR	Write failed: broken pipe
+ERROR	TLS handshake failure with oss endpoint
+ERROR	SSL handshake failure: no common cipher suites
+ERROR	Handshake failure negotiating TLS
+ERROR	Too many open files, ulimit exceeded
+ERROR	Too many open files in nginx worker
+ERROR	accept4: too many open files
+ERROR	Connection pool exhausted, no idle connections
+ERROR	Connection pool exhausted after 30s wait
+ERROR	HikariCP pool exhausted: acquisition timeout
+ERROR	Segmentation fault, core dumped
+ERROR	kernel panic: not syncing, fatal exception
+ERROR	panic: runtime error: index out of range
+ERROR	Checksum mismatch on block device, possible corruption
+ERROR	Data corruption detected in index page
+ERROR	Corruption found in page of clustered index
+ERROR	fsync failed on audit log: Input/output error
+ERROR	Disk I/O error on device sda2
+ERROR	I/O error reading sector on nvme0n1
+ERROR	Filesystem remounted read-only after journal abort
+ERROR	Journal aborted, filesystem now read-only
+ERROR	Binlog purge failed: partition read-only
+ERROR	Replication split-brain detected between primaries
+ERROR	Split-brain: two primaries elected in raft term
+ERROR	Raft split-brain: dual leaders detected
+ERROR	Replication stopped: duplicate entry for key PRIMARY
+ERROR	Replica SQL thread stopped with error 1062
+ERROR	Slave IO thread stopped: binlog mismatch
+ERROR	Cluster status RED: unassigned primary shards
+ERROR	Elasticsearch cluster RED, primary shards unassigned
+ERROR	Index blocked: flood-stage watermark exceeded
+ERROR	Circuit breaker OPEN for downstream payment-api
+ERROR	Circuit breaker open after consecutive failures
+ERROR	Bulkhead rejected: circuit breaker open
+ERROR	Health check failed 5 consecutive times
+ERROR	All health checks failing: 0 healthy targets
+ERROR	Readiness check failed, removing from rotation
+ERROR	Pod evicted: node had condition DiskPressure
+ERROR	Container exited with code 1, backoff exceeded
+ERROR	Pod evicted due to memory pressure
+ERROR	JVM paused 12.4s in Full GC, application unresponsive
+ERROR	Full GC pause 9.8s, stop-the-world exceeded
+ERROR	Application unresponsive during Full GC
+ERROR	Leader election failed: no quorum in cluster
+ERROR	etcd lost quorum: members unreachable
+ERROR	Raft election failed: no quorum
+ERROR	Authentication backend unreachable, logins rejected
+ERROR	LDAP bind failed: connect timed out
+ERROR	Kerberos KDC unreachable, authentication halted
+ERROR	DNS resolution failed for db-primary
+ERROR	DNS lookup timed out resolving api.internal
+ERROR	Name resolution failed for redis-master
+ERROR	Certificate expired 3 days ago, clients refusing connection
+ERROR	Certificate expired: TLS handshake aborting
+ERROR	x509: certificate has expired
+ERROR	Kafka broker not reachable, partition election stalled
+ERROR	Zookeeper session expired, service deregistered
+ERROR	RabbitMQ channel closed: PRECONDITION_FAILED
+ERROR	Write concern majority not satisfied
+ERROR	Majority write concern failed within timeout
+ERROR	Mongo write concern w:majority timeout
+ERROR	IPMI watchdog triggered hard reset
+ERROR	SMART status failing: pending sectors
+ERROR	Raid array degraded: drive marked faulty
+ERROR	Migration failed: Lock wait timeout exceeded
+ERROR	Lock wait timeout exceeded; try restarting transaction
+ERROR	DDL migration aborted: metadata lock timeout
+ERROR	Duplicate entry for key PRIMARY
+ERROR	Integrity constraint violation: foreign key check failed
+ERROR	Unique constraint violated on orders
+ERROR	Payment reconciliation gap detected: ledger mismatch
+ERROR	Reconciliation failed: ledger vs gateway diff
+ERROR	Inventory negative stock after concurrent deductions
+ERROR	Signature verification failed for webhook
+ERROR	JWT signature validation failed: kid mismatch
+ERROR	HMAC signature mismatch, dropping message
+ERROR	Consumer lag 182000 messages behind, critical
+ERROR	Long polling consumer lag critical on topic orders
+ERROR	Consumer group lag exceeded critical threshold
+ERROR	Flink job failed over 4 times, entering FAILED state
+ERROR	Spark executor lost: heartbeat timeout
+ERROR	Flink task FAILED after max restarts
+ERROR	Audit chain hash mismatch, tampering investigation opened
+ERROR	Audit chain verification failed: hash mismatch
+ERROR	Audit integrity alert: chain hash mismatch
+WARN	Latency p99 exceeds target on endpoint /api/chat
+WARN	Latency spike detected on read path
+WARN	p99 latency above baseline for 10 minutes
+WARN	Retry attempt 3 of 5 for upstream call
+WARN	Retry scheduled after transient failure
+WARN	Transient error, will retry shortly
+WARN	Slow query detected: 2.31s on alert_record
+WARN	Slow query: full table scan on audit_event
+WARN	Slow query took 3.1s without index
+WARN	Heap usage above 80% after traffic spike
+WARN	Memory usage climbing steadily over 6 hours
+WARN	Heap pressure rising, above 82%
+WARN	Disk usage reached 86%, rotation will trigger
+WARN	Disk usage above 85% on /var/log
+WARN	Disk usage climbing toward 90% watermark
+WARN	Certificate expires in 7 days
+WARN	Certificate renewal reminder: expires soon
+WARN	TLS certificate expires within a week
+WARN	Deprecated API called by legacy client
+WARN	Deprecated constructor used by legacy plugin
+WARN	Deprecated field usage detected in schema
+WARN	Connection pool usage approaching maximum
+WARN	Connection pool usage at 78% capacity
+WARN	Pool utilization above 75%
+WARN	GC pause above observation threshold
+WARN	GC pause 780ms, monitor for growth
+WARN	Young GC pause elevated at 640ms
+WARN	Cache hit ratio dropped to 61%
+WARN	Cache miss rate rising sharply
+WARN	Cache hit rate below 65% baseline
+WARN	Replica lag approaching alert threshold
+WARN	Replica lag growing beyond baseline
+WARN	Replication lag at 12s and rising
+WARN	Queue depth rising steadily
+WARN	Consumer lag growing over last hour
+WARN	Queue backlog accumulating on audit.events
+WARN	Fallback engaged, serving cached responses
+WARN	Degraded mode: feature flags reverted to snapshot
+WARN	Serving stale responses: fallback engaged
+WARN	Request throttled: client exceeded 90% of rate budget
+WARN	Rate limit window 88% consumed
+WARN	Throttling engaged for api-key ak_8821
+WARN	Partial response: 2 of 5 shards timed out
+WARN	Partial results returned: shard timeout
+WARN	Returning partial response after shard failures
+WARN	Optional config missing, using default
+WARN	Config key absent, falling back to default
+WARN	Optional telemetry config missing, default applied
+WARN	Clock skew detected between nodes
+WARN	Clock skew 820ms above advisory threshold
+WARN	NTP skew detected on node-3
+WARN	Thread pool rejection rate rising
+WARN	Rejected executions at 0.8%, monitor
+WARN	Thread pool queue near capacity, rejections rising
+WARN	TLS 1.0 negotiated with legacy client
+WARN	Weak cipher suite accepted for compatibility
+WARN	Legacy protocol version negotiated
+WARN	Password for service account expires in 10 days
+WARN	Service account password expiring soon
+WARN	Password expiry reminder for svc-backup
+WARN	File descriptor usage at 71% of limit
+WARN	Inode usage high, many small files
+WARN	Open file descriptors trending upward
+WARN	CPU steal time 6.2%, noisy neighbor suspected
+WARN	Steal time elevated on vcpu 1
+WARN	CPU steal above 5% for 30 minutes
+WARN	Network retransmit rate elevated on eth0
+WARN	Conntrack table 85% full
+WARN	TCP retransmits above baseline
+WARN	Conntrack table filling up rapidly
+WARN	BGP session flapped twice in 10 minutes
+WARN	ECMP path imbalance detected
+WARN	BGP peer session unstable
+WARN	Image pull throttled by registry
+WARN	Container restarted 3 times, backoff active
+WARN	Readiness probe flapped during warmup
+WARN	HPA at max replicas, scaling headroom exhausted
+WARN	CronJob missed schedule window
+WARN	Autoscaler at ceiling, no headroom
+WARN	Consumer group rebalancing repeatedly
+WARN	Offset commit failed, retry scheduled
+WARN	Rebalance storm on consumer group
+WARN	Feature flag rollout paused after error budget consumption
+WARN	Canary analysis score below promotion threshold
+WARN	Rollout held at 25% traffic
+WARN	Log volume 2.3x baseline, possible debug flag left on
+WARN	Log ingestion spike above baseline
+WARN	Log volume anomaly: 2x normal rate
+WARN	Trace sampling rate reduced to control cost
+WARN	Metric cardinality warning: many distinct label values
+WARN	Cardinality explosion on http status label
+WARN	Alert rule evaluation delayed
+WARN	Silence for alert expires in 30 minutes
+WARN	Alert evaluation queue congested
+WARN	Webhook endpoint responded 429, retry scheduled
+WARN	Notification channel unresponsive, fallback used
+WARN	Webhook delivery throttled by receiver
+WARN	Embedding batch slower than baseline
+WARN	Prompt token usage approaching context limit
+WARN	LLM response latency above p95 baseline
+WARN	Tool call round approaching iteration ceiling
+WARN	Plan step replanned, remaining budget low
+WARN	Iteration budget nearly exhausted
+WARN	Confidence below advisory threshold
+WARN	Anomaly score marginally above gate
+WARN	Classification confidence marginal
+WARN	Vacuum lag: dead tuples accumulating
+WARN	Autovacuum behind schedule on alert_record
+WARN	Vacuum backlog growing on large tables
+WARN	Lock contention detected on audit_event
+WARN	Long running transaction holds row locks
+WARN	Row lock waits rising on orders table
+WARN	Graceful shutdown close to termination grace period
+WARN	Shutdown drain exceeded 80% of grace window
+WARN	Slow shutdown: connections draining slowly
+WARN	DNS lookups slower than baseline
+WARN	Resolver latency elevated
+WARN	DNS cache hit rate falling
+WARN	PDB violation risk on voluntary disruption
+WARN	Upgrade window approaching for node pool
+WARN	Capacity reservation expiring soon
+INFO	Application started on port 8080
+INFO	Service started and ready to accept traffic
+INFO	Server started successfully
+INFO	Listening for HTTP connections on 0.0.0.0:8080
+INFO	HTTP listener bound to port 8080
+INFO	Now listening on port 9090
+INFO	User admin logged in successfully
+INFO	User ops.zhang logged out
+INFO	Login succeeded for user ops.li
+INFO	GET /api/alerts completed with status 200
+INFO	Request completed in 18 ms
+INFO	POST /api/chat returned 200 in 240 ms
+INFO	Health check passed for all targets
+INFO	Readiness probe passed for pod app-01
+INFO	Liveness check passed
+INFO	Scheduled job nightly-report finished
+INFO	Batch job completed without issues
+INFO	Cron task finished successfully
+INFO	Configuration reloaded successfully
+INFO	Feature flags loaded at startup
+INFO	Config refresh applied
+INFO	Connection established to mysql:3306
+INFO	Database connection pool started
+INFO	Connected to redis-master
+INFO	Cache warmup completed
+INFO	Cache preheated with 96 objects
+INFO	Warmup finished for local cache
+INFO	Deployment of release finished successfully
+INFO	Rollout completed for version 1.14.2
+INFO	Deploy succeeded in window
+INFO	Backup completed and uploaded to archive
+INFO	Snapshot completed and uploaded successfully
+INFO	Nightly backup finished
+INFO	Index rebuilt online
+INFO	Index creation completed
+INFO	Reindex finished for logs archive
+INFO	Table statistics updated for relations
+INFO	Statistics refresh completed
+INFO	Analyze finished on alert_record
+INFO	Metrics endpoint scraped successfully
+INFO	Prometheus scrape completed: 214 series
+INFO	Metrics exported
+INFO	Session created for user ops.li
+INFO	Session affinity established
+INFO	New session registered
+INFO	Graceful shutdown completed
+INFO	Shutdown finished in 6 seconds
+INFO	Clean shutdown completed
+INFO	Data sync finished, 0 conflicts
+INFO	Sync with region completed
+INFO	Replica sync finished
+INFO	Certificate renewal completed
+INFO	TLS certificate renewed for 90 days
+INFO	Cert rotation finished
+INFO	Password rotation succeeded
+INFO	Secret rotation completed
+INFO	Key rotation finished
+INFO	Cluster membership stable
+INFO	All cluster members healthy
+INFO	Membership gossip stable
+INFO	Raft snapshot installed, log compacted
+INFO	Raft log compaction finished
+INFO	Snapshot installed at latest index
+INFO	Checkpoint completed
+INFO	Checkpoint wrote 9124 buffers
+INFO	WAL checkpoint finished
+INFO	Vacuum finished on audit_event
+INFO	Autovacuum completed on alert_record
+INFO	Vacuum freed dead tuples
+INFO	Partition created for metric_samples
+INFO	Monthly partition created
+INFO	Partition maintenance done
+INFO	Compaction completed, files merged
+INFO	L2 compaction finished
+INFO	SSTable compaction completed
+INFO	Consumer group committed offset
+INFO	Offset commit succeeded
+INFO	Consumer offset checkpoint stored
+INFO	Retention cleanup freed disk space
+INFO	Old segments deleted by retention policy
+INFO	Retention sweep completed
+INFO	Schema version registered for subject
+INFO	Schema validation passed
+INFO	Schema registry updated
+INFO	Feature flag enabled for all traffic
+INFO	Flag rollout completed
+INFO	Feature toggle applied
+INFO	Canary promoted to stable
+INFO	Canary analysis passed, promoting
+INFO	Stable release promoted
+INFO	Container healthy after consecutive probes
+INFO	Pod autoscaled due to cpu pressure
+INFO	Node joined the cluster and passed readiness
+INFO	Agent heartbeat received from monitored servers
+INFO	Heartbeat received from agent
+INFO	Fleet heartbeat complete
+INFO	Log rotation completed
+INFO	Access log rotated and compressed
+INFO	Logrotate finished for app.log
+INFO	Trace ingestion rate steady
+INFO	Trace pipeline healthy
+INFO	Span ingestion nominal
+INFO	Dashboard loaded by user
+INFO	Grafana dashboard rendered
+INFO	Overview dashboard opened
+INFO	Alert rule evaluated ok
+INFO	Alert evaluation completed
+INFO	Silence window created for maintenance
+INFO	Runbook executed successfully
+INFO	Runbook completed all steps
+INFO	Remediation runbook finished
+INFO	Webhook delivery acknowledged with 200
+INFO	Notification channel verified
+INFO	Webhook endpoint test succeeded
+INFO	Knowledge base indexed new entries
+INFO	Embedding model loaded, dimension verified
+INFO	Vector search returned candidates
+INFO	Chat conversation created
+INFO	Intent recognized via L1 rules
+INFO	Router selected execution mode
+INFO	Plan validated successfully
+INFO	Tool executed in 312 ms
+INFO	Worker completed subtask
+INFO	Audit event recorded
+INFO	Audit trail integrity verified
+INFO	CSV export generated
+INFO	Confirmation token issued
+INFO	Security gate token redeemed
+INFO	CSRF token rotated
+INFO	Image pulled successfully
+INFO	Volume attached to container
+INFO	Network bridge created
+INFO	Migration applied successfully
+INFO	Transaction committed
+INFO	Replication caught up
+INFO	Binlog rotated at size limit
+INFO	License check passed
+INFO	Compliance report generated: 0 findings
+INFO	On-call handover acknowledged
+INFO	Maintenance page disabled after window closed
+INFO	GC overhead within normal range
+INFO	Query plan switched to index scan
+INFO	Rollback plan verified
+INFO	Lock acquired after short wait
+INFO	Advisory lock obtained immediately
+INFO	Row lock released quickly
+INFO	LLM call completed
+INFO	Dead tuple ratio below vacuum threshold
+INFO	Connection idle recycled normally
+INFO	Session cleaned up on logout
+INFO	No static resource /boaform/admin/formLogin for request '/boaform/admin/formLogin'
+INFO	No static resource /admin/config.php for request '/admin/config.php'
+INFO	No static resource /wp-login.php for request '/wp-login.php'
+INFO	No static resource /favicon.ico for request '/favicon.ico'
+INFO	No static resource /api/v1/unknown-path for request '/api/v1/unknown-path'
+INFO	No static resource /robots.txt for request '/robots.txt'

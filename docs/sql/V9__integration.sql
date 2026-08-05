@@ -1,0 +1,7 @@
+CREATE TABLE IF NOT EXISTS integration (
+    id          BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    type        VARCHAR(32) NOT NULL,
+    name        VARCHAR(128) NOT NULL,
+    config_json TEXT,
+    enabled     BOOLEAN NOT NULL DEFAULT TRUE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

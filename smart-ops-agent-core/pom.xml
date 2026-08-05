@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <!-- Agent 核心模块：意图识别、路由、编排、Worker、Plan、ReAct
+         依赖 common + domain + infrastructure，被 api 依赖。 -->
+    <parent>
+        <groupId>com.smartops</groupId>
+        <artifactId>smart-ops-agent</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>smart-ops-agent-core</artifactId>
+    <name>smart-ops-agent-core</name>
+    <description>Agent 核心模块 - 意图识别/路由/编排/Worker/Plan/ReAct</description>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.smartops</groupId>
+            <artifactId>smart-ops-common</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.smartops</groupId>
+            <artifactId>smart-ops-domain</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.smartops</groupId>
+            <artifactId>smart-ops-infrastructure</artifactId>
+        </dependency>
+
+        <!-- Spring AI ChatClient：Agent 与 LLM 交互入口
+             通过 infrastructure 间接引入，这里显式声明便于直接使用 -->
+        <dependency>
+            <groupId>org.springframework.ai</groupId>
+            <artifactId>spring-ai-client-chat</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <optional>true</optional>
+        </dependency>
+    </dependencies>
+
+</project>

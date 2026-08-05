@@ -1,0 +1,285 @@
+# 智能运维 Agent 平台 - 公共配置
+# 本文件存放所有环境通用的配置，环境差异由 application-{profile}.yml 覆盖。
+
+server:
+  # Web 服务端口
+  port: 8080
+  servlet:
+    encoding:
+      charset: UTF-8
+      force: true
+
+spring:
+  application:
+    # 应用名称，用于日志追踪与服务发现
+    name: smart-ops-agent
+
+  # 配置文件激活：默认 dev 环境，生产环境通过 --spring.profiles.active=prod 覆盖
+  profiles:
+    active: dev
+
+  # Jackson 序列化配置
+  jackson:
+    # 时区统一为东八区，避免时间序列化偏移
+    time-zone: Asia/Shanghai
+    date-format: yyyy-MM-dd HH:mm:ss
+    # 序列化时忽略 null 字段，减少传输体积
+    default-property-inclusion: non_null
+
+  # Spring AI 配置（spring.ai 前缀）
+  ai:
+    # DeepSeek 通过 OpenAI 兼容协议接入，base-url 指向 DeepSeek
+    openai:
+      base-url: https://api.deepseek.com
+      api-key: ${DEEPSEEK_API_KEY:sk-placeholder}
+      chat:
+        # Spring AI 2.0 移除了 options 配置段，model/temperature 直接挂在 chat 下
+        # 默认模型：deepseek-chat，成本较低；复杂推理可切换 deepseek-reasoner
+        model: deepseek-chat
+        temperature: 0.3
+
+    # MCP Client 配置 - 对应 agent.md 阶段一任务3
+    # 连接 Prometheus MCP Server，Spring AI 2.0 默认使用 Streamable HTTP 传输
+    mcp:
+      client:
+        # 与自定义开关 smartops.mcp.enabled 联动，默认关闭（无 MCP Server 时优雅降级）
+        enabled: ${smartops.mcp.enabled:false}
+        name: smart-ops-mcp-client
+        version: 1.0.0
+        # 请求超时 30 秒，Prometheus 查询可能较慢
+        request-timeout: 30s
+        type: SYNC
+        # 启用 MCP 工具回调，自动将 MCP Server 的工具注册为 Spring AI ToolCallback
+        toolcallback:
+          enabled: true
+        # Streamable HTTP 传输：连接远程 Prometheus MCP Server（Spring AI 2.0 取代 SSE）
+        streamable-http:
+          connections:
+            prometheus:
+              # MCP Server 地址，通过环境变量注入，便于不同环境切换
+              url: ${PROMETHEUS_MCP_URL:http://localhost:9090}
+
+# 智能运维平台自定义配置
+smartops:
+  # MCP 总开关：false 时不连接任何 MCP Server，PrometheusTools 返回显式 unavailable
+  mcp:
+    enabled: false
+  # 短期记忆配置（对应 agent.md 任务5）
+  memory:
+    short-term:
+      # 滑动窗口大小：保留最近 20 条对话，参考规划文档阶段一任务5
+      window-size: 20
+    # 最大会话数上限：超出后按 LRU 淘汰最久未访问会话，防止内存无界增长
+    max-conversations: 1000
+    # 中期记忆配置（阶段四，ADR-014）：Redis 持久化会话记忆
+    mid-term:
+      # 开关：true 时记忆仓库切换为 Redis 实现（会话跨重启存活），false 用有界内存
+      enabled: false
+      # 会话 Redis TTL（天），读/写时刷新
+      ttl-days: 7
+    # 工作记忆配置（阶段四，ADR-014）：执行器单次任务的中间状态（进程内，不持久化）
+    working:
+      # 开关：false 时不创建工作记忆 Bean，执行器经 ObjectProvider 降级跳过读写
+      enabled: true
+      # 单会话条目数上限，超出按 LRU 淘汰最久未访问条目
+      max-entries: 100
+      # 会话总数上限，超出按 LRU 淘汰最久未访问会话
+      max-conversations: 500
+  # ReAct 执行器配置
+  react:
+    # 单次请求内 LLM 工具调用的最大轮次上限：超过后终止工具循环并降级返回，
+    # 防止工具调用循环失控；与 ReActExecutor.MAX_ITERATIONS 对齐，
+    # 可被 ReActExecutor 按请求传入的 maxIterations 覆盖
+    max-tool-call-rounds: 10
+  # Supervisor 多 Agent 编排配置
+  supervisor:
+    # 单个子任务的执行超时（秒）：超时后该子任务记为失败并继续后续子任务，
+    # 防止单个 Worker 长时间阻塞拖垮整个编排
+    subtask-timeout-seconds: 60
+  # Embedding 配置（阶段四 RAG 向量路，ADR-015）：
+  # DeepSeek 无 embedding API，使用本地 Ollama 的 OpenAI 兼容端点，独立命名空间不复用 spring.ai.openai
+  embedding:
+    # 总开关：false 时不创建 EmbeddingModel Bean，无 Ollama 环境应用照常启动
+    enabled: false
+    # Ollama OpenAI 兼容端点
+    base-url: http://localhost:11434/v1
+    # Ollama 不校验密钥，占位即可；切云端服务时经环境变量注入
+    api-key: ${OLLAMA_API_KEY:ollama}
+    # embedding 模型（需先 ollama pull bge-m3）
+    model: bge-m3
+    # 向量维度：bge-m3 实际输出 1024 维，须与 ES dense_vector mapping 一致
+    dimensions: 1024
+  # Elasticsearch 配置（阶段四两级混合检索，ADR-016）
+  elasticsearch:
+    # 总开关：false 时不创建 Rest5Client/VectorStore/KnowledgeRetriever，无 ES 环境应用照常启动
+    enabled: false
+    # ES 地址（docker-compose 单节点）
+    uris: http://localhost:9200
+    # 知识库索引名
+    index: smartops-knowledge
+    # RRF 融合常数（客户端两路融合：score = Σ 1/(rrf-k + rank)）
+    rrf-k: 60
+    # 默认召回条数
+    top-k: 5
+  # 知识库 ETL 配置（阶段四，ADR-016）：启动时扫描 Markdown 知识源切块写入向量库
+  knowledge:
+    etl:
+      # 总开关：false 时启动不执行 ETL；需 ES + Ollama embedding 均已开启
+      enabled: false
+      # Markdown 知识源目录（相对工作目录）
+      source-dir: docs/knowledge
+      # 单块最大字符数（近似 token 上限），超出按行边界再切分
+      chunk-size: 800
+
+  # 日志采集分析配置（阶段五 logwatch）：采集本机日志 → 关键字检出 → 四层分析 → 告警落库/SSE 推送
+  logwatch:
+    # 总开关：false 时不创建采集源与分析管线，应用照常启动
+    enabled: false
+    # 采集源列表：
+    #   type=file 采集本机日志文件，path 为日志文件路径；
+    #   type=jar  定位运行中 jar 进程的标准输出日志，path 为 jar 包路径（仅 Linux，Windows 降级重试）；
+    #   keywords 为该源自定义告警关键字（大小写不敏感子串，叠加在内置 ERROR/Exception 等之上）
+    # 示例：
+    #   - type: file
+    #     path: /var/log/myapp/app.log
+    #     keywords: [OutOfMemoryError, 连接超时]
+    #   - type: jar
+    #     path: /opt/app/myapp.jar
+    sources: []
+    # 排除子串列表：日志内容命中任一子串即不告警（大小写不敏感）。
+    # 典型用途：采集应用自身日志时屏蔽采集管道自身包名，防自引用告警风暴
+    # exclude-keywords: [c.s.agent.logwatch, c.s.agent.orchestrator, c.s.agent.worker]
+    exclude-keywords: []
+    # 文件 tail 轮询间隔（毫秒）
+    poll-interval-ms: 500
+    # 采集断点状态目录（offset 持久化，重启续采）
+    state-dir: ./logwatch-state
+    # 分析队列容量（背压边界，满则丢弃并计数，见管线 droppedCount）
+    queue-capacity: 2000
+    l0:
+      # L0 告警抑制窗口（秒）：同指纹窗口内合并计数，防告警风暴
+      window-seconds: 300
+    ml:
+      # L2 ML 机器学习定级层开关（阶段十五 ADR-019）：开启后 L1 正则未命中事件
+      # 由 Tribuo 逻辑回归分类器裁决（救援正则词表漏判的错误日志）；关闭则行为与旧版一致。
+      # 注意：开启后采集预过滤同步放开——不再要求关键字命中（否则 ML 层收不到
+      # 它要救援的词表外事件），仅保留 exclude-keywords 排除判定，全量日志经
+      # L0/L1/L2 定级，判 INFO 即抑制（开销 <1ms/条，队列容量兜底）
+      enabled: false
+      # 采信 ML 预测的置信度下限（低于则按旧行为抑制，不产生告警）
+      confidence-threshold: 0.85
+      # 启动训练留出集准确率下限：低于该值分类器不启用，管线整体回退旧行为
+      min-accuracy: 0.8
+      # 外部训练数据 TSV 路径（LEVEL<TAB>文本），为空用 classpath 内置种子数据 ml/log-level-seed.tsv
+      training-data-path:
+      # 训练切分随机种子（固定可复现）
+      seed: 42
+    l3:
+      # L3 LLM 根因分析每分钟调用上限（费用保护，超限以 L1 结果降级落库）
+      rate-per-minute: 10
+      # 同指纹窗口内合并次数达到该值时升级 L4 会诊
+      escalate-occurrence-threshold: 3
+    l4:
+      # L4 Supervisor 会诊每日次数上限（费用保护）
+      daily-limit: 20
+    sse:
+      # SSE 实时推送背压缓冲容量（慢订阅者积压上界，超出丢弃）
+      buffer-size: 256
+
+  # SSE 断线重连与任务缓存（阶段五 P12）
+  sse:
+    task:
+      # 每个会话 Sinks 缓冲容量（超出丢弃新事件，不阻塞 ChatClient）
+      buffer-size: 64
+      # COMPLETED 任务结果保留分钟数（超时从注册表移除）
+      completed-ttl-minutes: 5
+      # RUNNING 任务最大存活分钟数（僵尸防护）
+      running-max-minutes: 10
+      # 最大缓存会话数（超出驱逐最旧 COMPLETED）
+      max-conversations: 200
+
+  # Runbook 执行引擎配置（阶段十二 S4 真实化）
+  runbook:
+    # SCRIPT 步骤总开关：默认禁用（安全考虑），启用后仅允许白名单前缀命令
+    script-enabled: false
+    # SCRIPT 命令白名单前缀列表（仅当 script-enabled=true 生效），
+    # 命令以任一前缀开头才允许执行；空列表表示全部拒绝
+    script-allowlist: []
+    # HTTP/WEBHOOK 步骤失败重试次数（不含首次执行）
+    step-retries: 1
+
+  # 用户体系与认证配置（阶段十二 S6）
+  auth:
+    # JWT 签名密钥（HS256，至少 32 字节），生产必须经环境变量 SMARTOPS_JWT_SECRET 覆盖
+    jwt-secret: ${SMARTOPS_JWT_SECRET:smartops-dev-jwt-secret-0123456789abcdef}
+    # 初始 admin 密码（仅 sys_user 表为空时写入，生产必须覆盖并尽快修改）
+    admin-initial-password: ${SMARTOPS_ADMIN_PASSWORD:admin123}
+
+  # 操作审计配置（阶段五 L2 审计）：LLM/工具/任务/安全决策四类事件异步落库
+  audit:
+    # 审计事件队列容量（背压边界，满则丢弃并计数，
+    # 指标 smartops.audit.queue.dropped 可观测丢弃量）
+    queue-capacity: 2000
+
+  # 大语言模型配置（阶段五多模型抽象与韧性增强）
+  llm:
+    # 主路径 LLM 调用每分钟上限（费用保护），0 或负数为不限流
+    rate-per-minute: 30
+    # 默认 Provider 名称（多模型配置时指定，见 application-prod.yml 示例）
+    # default-provider: deepseek
+    # 多模型 Provider 配置（仅当 smartops.llm.default-provider 设置时激活）：
+    # providers:
+    #   deepseek:
+    #     type: openai
+    #     base-url: https://api.deepseek.com
+    #     api-key: ${DEEPSEEK_API_KEY}
+    #     model: deepseek-chat
+    #     temperature: 0.3
+    #     supports-tools: true
+
+  # 工具调用并发控制（阶段五韧性增强）
+  tool:
+    # 同时执行工具调用的最大线程数（≤0 为不限）
+    max-concurrent: 0
+    # 工具执行 Semaphore 获取许可超时（毫秒）
+    semaphore-timeout-ms: 30000
+
+  # 任务执行并发控制（阶段五韧性增强）
+  task:
+    # AgentRouter 并发执行任务的最大线程数（暂未启用，保留配置 key）
+    # max-concurrent: 10
+    # 任务队列容量
+    # queue-capacity: 100
+
+  # 安全配置（阶段五安全模型）
+  security:
+    l0:
+      # L0 输入过滤开关（默认开启）
+      enabled: true
+
+# 日志配置
+logging:
+  level:
+    root: INFO
+    com.smartops: DEBUG
+    org.springframework.ai: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+
+# Actuator 监控端点
+management:
+  endpoints:
+    web:
+      exposure:
+        # 暴露健康检查、指标、信息、Prometheus 导出端点
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      # 显示健康详情，便于排查
+      show-details: always
+
+  # 指标采集（阶段八 Prometheus 原生采集）
+  metrics:
+    # 自采集 /actuator/prometheus 端点URL
+    # prometheus-url: http://localhost:8080/actuator/prometheus
+    prometheus-url:

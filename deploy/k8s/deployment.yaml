@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: smart-ops-agent
+  namespace: smartops
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: smart-ops-agent
+  template:
+    metadata:
+      labels:
+        app: smart-ops-agent
+    spec:
+      containers:
+      - name: app
+        image: smart-ops-agent:latest
+        ports:
+        - containerPort: 8080
+        env:
+        - name: MYSQL_URL
+          valueFrom: { secretKeyRef: { name: smartops-secret, key: mysql-url } }
+        - name: MYSQL_PASSWORD
+          valueFrom: { secretKeyRef: { name: smartops-secret, key: mysql-password } }
+        - name: MOONSHOT_API_KEY
+          valueFrom: { secretKeyRef: { name: smartops-secret, key: moonshot-api-key } }
+        - name: REDIS_HOST
+          value: "redis-service"
+        resources:
+          requests: { memory: "512Mi", cpu: "500m" }
+          limits: { memory: "1Gi", cpu: "1000m" }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: smart-ops-agent
+  namespace: smartops
+spec:
+  selector: { app: smart-ops-agent }
+  ports:
+  - port: 8080
+    targetPort: 8080
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: smart-ops-agent
+  namespace: smartops
+spec:
+  rules:
+  - host: smartops.example.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: smart-ops-agent
+            port:
+              number: 8080

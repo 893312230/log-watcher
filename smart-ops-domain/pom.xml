@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <!-- 领域模块：告警、指标、日志、任务等领域模型
+         依赖 common，被 infrastructure 和 agent-core 依赖。 -->
+    <parent>
+        <groupId>com.smartops</groupId>
+        <artifactId>smart-ops-agent</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>smart-ops-domain</artifactId>
+    <name>smart-ops-domain</name>
+    <description>领域模块 - 告警、指标、日志、任务领域模型</description>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.smartops</groupId>
+            <artifactId>smart-ops-common</artifactId>
+        </dependency>
+        <!-- JPA 注解：领域实体需要持久化注解 -->
+        <dependency>
+            <groupId>jakarta.persistence</groupId>
+            <artifactId>jakarta.persistence-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <optional>true</optional>
+        </dependency>
+    </dependencies>
+
+</project>

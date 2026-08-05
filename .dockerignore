@@ -1,0 +1,9 @@
+# Docker 构建上下文排除：减小上传体积、避免缓存失效
+.git
+**/target
+.idea
+.vs
+*.iml
+# 知识库文档当前不随镜像分发（ETL 开关关闭）；启用 RAG 时移除本行
+docs
+.claude

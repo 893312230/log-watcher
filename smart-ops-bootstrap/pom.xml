@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <!-- 启动模块：应用入口、配置文件、Prompt 模板
+         聚合所有模块依赖，打包为可执行 jar。 -->
+    <parent>
+        <groupId>com.smartops</groupId>
+        <artifactId>smart-ops-agent</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>smart-ops-bootstrap</artifactId>
+    <name>smart-ops-bootstrap</name>
+    <description>启动模块 - 应用入口/配置/Prompt 模板</description>
+
+    <dependencies>
+        <!-- 聚合所有模块，形成完整应用 -->
+        <dependency>
+            <groupId>com.smartops</groupId>
+            <artifactId>smart-ops-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.smartops</groupId>
+            <artifactId>smart-ops-agent-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.smartops</groupId>
+            <artifactId>smart-ops-infrastructure</artifactId>
+        </dependency>
+
+        <!-- Spring AI OpenAI starter：DeepSeek 兼容 OpenAI 协议，通过 base-url 切换
+             注意 1.0.0 GA 的 starter 命名带 model- 前缀 -->
+        <dependency>
+            <groupId>org.springframework.ai</groupId>
+            <artifactId>spring-ai-starter-model-openai</artifactId>
+        </dependency>
+
+        <!-- Spring Boot Actuator：生产化监控 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+
+        <!-- Spring Security：API 认证 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-security</artifactId>
+        </dependency>
+        <!-- Micrometer Prometheus 注册表：/actuator/prometheus 导出 -->
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-registry-prometheus</artifactId>
+        </dependency>
+
+        <!-- 配置元数据：application.yml 自动补全 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-configuration-processor</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <optional>true</optional>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <!-- 打包为可执行 jar -->
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <excludes>
+                        <exclude>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                        </exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
+            <!-- 覆盖率检查：启动模块本身代码少，放行覆盖率门禁 -->
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <configuration>
+                    <skip>true</skip>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>

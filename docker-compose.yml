@@ -1,0 +1,67 @@
+# 本地开发环境依赖
+# 启动方式：docker-compose up -d
+# 对应 agent.md 阶段一任务7：搭建 MySQL + Redis
+#
+# 注意：Windows 环境若未安装 Docker Desktop，可改为本地直接安装 MySQL 8.x 和 Redis 7.x。
+
+services:
+  # MySQL 8.x - 业务数据存储
+  mysql:
+    image: mysql:8.0
+    container_name: smart-ops-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: smart_ops
+      MYSQL_CHARSET: utf8mb4
+      MYSQL_COLLATION: utf8mb4_unicode_ci
+      TZ: Asia/Shanghai
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot123"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis 7.x - 缓存/会话/中期记忆（ADR-014）
+  redis:
+    image: redis:7-alpine
+    container_name: smart-ops-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Elasticsearch 8.x - 阶段四知识库两级检索（BM25 + dense_vector，ADR-016）
+  # 注意：Embedding 模型 bge-m3 由宿主机本地 Ollama 提供（http://localhost:11434），
+  #       不入 compose；需先执行 ollama pull bge-m3（ADR-015）
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.14.3
+    container_name: smart-ops-elasticsearch
+    environment:
+      discovery.type: single-node
+      xpack.security.enabled: "false"
+      ES_JAVA_OPTS: -Xms512m -Xmx512m
+    ports:
+      - "9200:9200"
+    volumes:
+      - es-data:/usr/share/elasticsearch/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:9200/_cluster/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  mysql-data:
+  redis-data:
+  es-data:

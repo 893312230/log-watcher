@@ -1,0 +1,48 @@
+# Maven 构建产物
+target/
+*.jar
+*.war
+*.ear
+!.mvn/wrapper/maven-wrapper.jar
+
+# IDE 文件
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+.settings/
+.project
+.classpath
+*.swp
+
+# 日志文件
+logs/
+*.log
+
+# 操作系统文件
+.DS_Store
+Thumbs.db
+
+# 敏感配置（本地环境变量文件，不提交）
+.env
+.env.local
+application-local.yml
+
+# 覆盖率报告
+**/jacoco.exec
+**/target/site/jacoco/
+
+# Maven 临时文件
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.properties
+.playwright-mcp/
+
+# 个人文档（仅本地，不进公开仓库）
+docs/interview/
+RESUME_GUIDE.md
+
+# 本地工具配置（仅本地）
+.claude/
+CLAUDE.md
+docs/superpowers/

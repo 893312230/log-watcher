@@ -1,0 +1,117 @@
+# 生产环境配置
+# 通过 --spring.profiles.active=prod 激活。
+# 所有敏感配置通过环境变量注入，不硬编码。
+
+spring:
+  datasource:
+    # MySQL 8 caching_sha2_password 在非 SSL 连接下首次认证需允许公钥检索（容器重建后 sha2 缓存清空）
+    url: ${MYSQL_URL:jdbc:mysql://mysql:3306/smart_ops?useUnicode=true&characterEncoding=utf-8&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai}
+    username: ${MYSQL_USERNAME:root}
+    password: ${MYSQL_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    # 生产环境禁止自动建表，使用 Flyway 等工具管理 schema
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+
+  data:
+    redis:
+      host: ${REDIS_HOST:redis}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD}
+      timeout: 5s
+
+  ai:
+    # Kimi（Moonshot）经 OpenAI 兼容协议接入，覆盖 application.yml 的 DeepSeek 默认配置
+    openai:
+      # Moonshot 开放平台端点（国内站；国际站为 https://api.moonshot.ai/v1）
+      base-url: ${MOONSHOT_BASE_URL:https://api.moonshot.cn/v1}
+      # 密钥仅从环境变量注入（服务器 .env），不落仓库
+      api-key: ${MOONSHOT_API_KEY}
+      chat:
+        # Kimi K2：原生支持工具调用的 MoE 模型，适合 Agent 场景；
+        # 可通过 MOONSHOT_MODEL 环境变量切换同协议其他模型
+        model: ${MOONSHOT_MODEL:kimi-k2-0711-preview}
+        # 采样温度：kimi-for-coding 等推理模型仅允许 1，经 MOONSHOT_TEMPERATURE 覆盖
+        temperature: ${MOONSHOT_TEMPERATURE:0.3}
+
+smartops:
+  memory:
+    mid-term:
+      # 生产开启 Redis 中期记忆（ADR-014）：会话记忆跨重启存活，对应 compose 的 redis 服务
+      enabled: true
+  # ES/Ollama/ETL 开关保持关闭（继承 application.yml 默认 false）：
+  # 当前服务器 2C/1.8G 不足以承载 ES + bge-m3；升配后经环境变量开启，
+  # 如 SMARTOPS_ELASTICSEARCH_ENABLED=true（Spring 宽松绑定直接覆盖 yml），
+  # 同时需补充 SMARTOPS_ELASTICSEARCH_URIS / SMARTOPS_EMBEDDING_BASE_URL 指向实际地址
+
+  # 阶段五 logwatch：采集应用自身落盘日志，ERROR 检出 → 分层分析 → 告警落库 + SSE 推送
+  logwatch:
+    # 生产默认开启，可用 LOGWATCH_ENABLED=false 紧急关停采集分析
+    enabled: ${LOGWATCH_ENABLED:true}
+    ml:
+      # 阶段十五：L2 ML 定级层生产默认开启（Tribuo 进程内训练，启动日志可见留出集准确率；
+      # 不达标自动回退旧行为）。可用 LOGWATCH_ML_ENABLED=false 紧急关停
+      enabled: ${LOGWATCH_ML_ENABLED:true}
+      # 生产采信置信度下限（高于缺省 0.85，宁可少救不可错救）
+      confidence-threshold: ${LOGWATCH_ML_CONFIDENCE_THRESHOLD:0.9}
+    sources:
+      # 应用自身日志文件（logging.file.name），宿主机经 ./logs 卷可见
+      - type: file
+        path: /app/logs/smart-ops.log
+    # 屏蔽采集管道自身日志，防自引用告警风暴（生产 E2E 实测发生，见 ADR-017）：
+    # 1) 包名前缀：管道各层日志条目整体排除——注意落盘文件 logger 按 39 字符缩写，
+    #    缩写深度随类名长度变化（pipeline.impl 包短类名渲染 c.s.a.logwatch.pipeline.*、
+    #    长类名渲染 c.s.a.l.pipeline.*），两种形态的共同子串是 .pipeline.impl；
+    # 2) L4 会诊提示词固定片段：Supervisor 多行日志中的回显错误行会被
+    #    按日期前缀切成"合成条目"（不含包名），这些片段是其必然携带的标记；
+    # 3) Spring 404 静态资源缺失：公网扫描器探测固定话术，永不值得告警
+    #    （GlobalExceptionHandler 已降 INFO 单行，此排除防 ML 误判兜底）
+    exclude-keywords:
+      - c.s.agent.logwatch
+      - c.s.agent.orchestrator
+      - c.s.agent.worker
+      - c.s.infrastructure.logwatch
+      - c.s.i.logwatch
+      - .pipeline.impl
+      - No static resource
+      - 生产日志告警需要多 Agent 联合会诊
+      - 请给出根因结论与处置建议
+    # 断点状态目录（compose 挂载 logwatch-state 卷，重启续采）
+    state-dir: /app/logwatch-state
+
+  # 多模型 Provider 配置（阶段五多模型抽象层）：按场景路由到不同 LLM 端点
+  # 需在 .env 中设置 MOONSHOT_API_KEY 与 DEEPSEEK_API_KEY
+  llm:
+    # 默认 Provider 名称
+    default-provider: moonshot
+    providers:
+      # 标准 Moonshot Kimi K2：支持工具调用（ReAct/MCP），温度 0.3
+      moonshot:
+        type: openai
+        base-url: ${MOONSHOT_BASE_URL:https://api.moonshot.cn/v1}
+        api-key: ${MOONSHOT_API_KEY}
+        model: ${MOONSHOT_MODEL:kimi-k2-0711-preview}
+        temperature: ${MOONSHOT_TEMPERATURE:0.3}
+        supports-tools: true
+      # DeepSeek：备用工具调用 Provider
+      deepseek:
+        type: openai
+        base-url: https://api.deepseek.com
+        api-key: ${DEEPSEEK_API_KEY}
+        model: deepseek-chat
+        temperature: 0.3
+        supports-tools: true
+    # 主路径 LLM 调用每分钟上限
+    rate-per-minute: 30
+
+logging:
+  file:
+    # 应用日志落盘：logwatch file 采集源 tail 该文件
+    name: /app/logs/smart-ops.log
+  level:
+    root: WARN
+    com.smartops: INFO
+    org.springframework.ai: WARN

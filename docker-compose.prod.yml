@@ -1,0 +1,97 @@
+# 生产环境编排（最小化：应用 + MySQL + Redis）
+# 服务器 2C/1.8G 内存，ES/Ollama 暂不部署；升配后通过环境变量打开 RAG 开关即可。
+# 启动方式：docker compose -f docker-compose.prod.yml --env-file .env up -d
+
+services:
+  # MySQL 8.x - 业务数据存储（不暴露宿主机端口，仅 compose 内网访问）
+  mysql:
+    image: mysql:8.0
+    container_name: smart-ops-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_DATABASE: smart_ops
+      TZ: Asia/Shanghai
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      # 小内存服务器：关闭 performance_schema、限制 buffer pool，控制内存占用
+      - --performance-schema=OFF
+      - --innodb-buffer-pool-size=128M
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p${MYSQL_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - smart-ops
+    restart: unless-stopped
+
+  # Redis 7.x - 中期记忆/会话持久化（ADR-014，不暴露宿主机端口）
+  redis:
+    image: redis:7-alpine
+    container_name: smart-ops-redis
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "REDISCLI_AUTH=${REDIS_PASSWORD} redis-cli ping | grep PONG"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - smart-ops
+    restart: unless-stopped
+
+  # 应用本体：多阶段 Dockerfile 构建，生产 profile 激活
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: smart-ops-agent:latest
+    container_name: smart-ops-app
+    environment:
+      # Kimi（Moonshot）API Key，必须提供，否则应用启动即失败
+      MOONSHOT_API_KEY: ${MOONSHOT_API_KEY}
+      # Kimi 接入端点与模型：默认开放平台 + K2；kimi-code 订阅则在 .env 覆盖为
+      # MOONSHOT_BASE_URL=https://api.kimi.com/coding/v1, MOONSHOT_MODEL=kimi-for-coding
+      MOONSHOT_BASE_URL: ${MOONSHOT_BASE_URL:-https://api.moonshot.cn/v1}
+      MOONSHOT_MODEL: ${MOONSHOT_MODEL:-kimi-k2-0711-preview}
+      # 采样温度：kimi-for-coding 推理模型仅允许 1，在 .env 中覆盖
+      MOONSHOT_TEMPERATURE: ${MOONSHOT_TEMPERATURE:-0.3}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      # 覆盖 jar 内默认 JDBC URL：MySQL 8 sha2 首次认证（容器重建缓存清空）需公钥检索，等下次镜像重建后可移除
+      MYSQL_URL: jdbc:mysql://mysql:3306/smart_ops?useUnicode=true&characterEncoding=utf-8&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      # JWT 签名密钥（≥32 字节，生产必须显式设置，缺失则拒绝启动）
+      SMARTOPS_JWT_SECRET: ${SMARTOPS_JWT_SECRET:?must set SMARTOPS_JWT_SECRET in .env}
+      # 首次启动种子 admin 账号的初始密码（仅 sys_user 为空时生效，登录后请尽快修改）
+      SMARTOPS_ADMIN_PASSWORD: ${SMARTOPS_ADMIN_PASSWORD:?must set SMARTOPS_ADMIN_PASSWORD in .env}
+      # 1.8G 内存服务器：限制 JVM 堆，给 MySQL/Redis/系统留出余量
+      JAVA_OPTS: -Xmx512m -Xms256m
+      TZ: Asia/Shanghai
+    ports:
+      - "8080:8080"
+    volumes:
+      # 应用落盘日志：logwatch file 采集源 tail 该目录下 smart-ops.log
+      - ./logs:/app/logs
+      # logwatch 采集断点状态（重启续采）
+      - logwatch-state:/app/logwatch-state
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - smart-ops
+    restart: unless-stopped
+
+volumes:
+  mysql-data:
+  redis-data:
+  logwatch-state:
+
+networks:
+  smart-ops:
+    driver: bridge

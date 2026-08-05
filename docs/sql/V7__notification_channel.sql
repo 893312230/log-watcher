@@ -1,0 +1,9 @@
+CREATE TABLE IF NOT EXISTS notification_channel (
+    id         BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    name       VARCHAR(128) NOT NULL,
+    type       VARCHAR(32) NOT NULL DEFAULT 'WEBHOOK',
+    target_url VARCHAR(1024) NOT NULL,
+    enabled    BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at DATETIME(6) NOT NULL,
+    updated_at DATETIME(6) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <!-- 公共模块：常量、枚举、异常、模型、工具
+         被所有其他模块依赖，禁止反向依赖任何业务模块。 -->
+    <parent>
+        <groupId>com.smartops</groupId>
+        <artifactId>smart-ops-agent</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>smart-ops-common</artifactId>
+    <name>smart-ops-common</name>
+    <description>公共模块 - 常量、枚举、异常、模型、工具</description>
+
+    <dependencies>
+        <!-- 仅依赖 Spring 核心工具，不引入 Web/AI 等重依赖，保持轻量 -->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-core</artifactId>
+        </dependency>
+        <!-- Lombok：减少样板代码，全局使用 -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <!-- Jackson：JSON 序列化基础 -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+        </dependency>
+    </dependencies>
+
+</project>

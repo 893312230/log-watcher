@@ -1,0 +1,219 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <!-- 智能运维 Agent 平台根 POM
+         统一管理依赖版本、构建配置、模块聚合。
+         所有子模块继承本 POM，禁止子模块自行声明核心依赖版本。 -->
+
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>4.0.7</version>
+        <relativePath/>
+    </parent>
+
+    <groupId>com.smartops</groupId>
+    <artifactId>smart-ops-agent</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
+    <name>smart-ops-agent</name>
+    <description>智能运维 Multi-Agent 平台 - 基于 Spring Boot 4.x + Spring AI 2.0.0</description>
+
+    <properties>
+        <!-- JDK 版本：Spring Boot 4.x 最低要求 17 -->
+        <java.version>17</java.version>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+
+        <!-- Spring AI 版本：2.0.0 GA，2026-06-12 发布（需 Spring Boot 4.x，见 ADR-009） -->
+        <spring-ai.version>2.0.0</spring-ai.version>
+
+        <!-- Resilience4j 版本：2.4.0，2026-03 发布（含 spring-boot4 模块） -->
+        <resilience4j.version>2.4.0</resilience4j.version>
+
+        <!-- 其他依赖版本 -->
+        <maven-compiler-plugin.version>3.13.0</maven-compiler-plugin.version>
+        <maven-surefire-plugin.version>3.5.2</maven-surefire-plugin.version>
+        <jacoco-maven-plugin.version>0.8.12</jacoco-maven-plugin.version>
+    </properties>
+
+    <!-- 聚合的子模块，构建顺序自下而上 -->
+    <modules>
+        <module>smart-ops-common</module>
+        <module>smart-ops-domain</module>
+        <module>smart-ops-infrastructure</module>
+        <module>smart-ops-agent-core</module>
+        <module>smart-ops-api</module>
+        <module>smart-ops-bootstrap</module>
+    </modules>
+
+    <!-- 统一依赖版本管理。子模块引用时无需写 version。
+         Spring AI BOM 负责管理 spring-ai-* 系列依赖版本。 -->
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework.ai</groupId>
+                <artifactId>spring-ai-bom</artifactId>
+                <version>${spring-ai.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>io.github.resilience4j</groupId>
+                <artifactId>resilience4j-bom</artifactId>
+                <version>${resilience4j.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
+            <!-- Tribuo 机器学习库（阶段十五 ML 定级层）：纯 Java 进程内推理，无 native 依赖 -->
+            <dependency>
+                <groupId>org.tribuo</groupId>
+                <artifactId>tribuo-classification-sgd</artifactId>
+                <version>4.3.1</version>
+            </dependency>
+            <!-- 项目内部模块版本统一管理 -->
+            <dependency>
+                <groupId>com.smartops</groupId>
+                <artifactId>smart-ops-common</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <!-- JWT 签发与校验（阶段十二用户体系） -->
+            <dependency>
+                <groupId>io.jsonwebtoken</groupId>
+                <artifactId>jjwt-api</artifactId>
+                <version>0.12.6</version>
+            </dependency>
+            <dependency>
+                <groupId>io.jsonwebtoken</groupId>
+                <artifactId>jjwt-impl</artifactId>
+                <version>0.12.6</version>
+            </dependency>
+            <dependency>
+                <groupId>io.jsonwebtoken</groupId>
+                <artifactId>jjwt-jackson</artifactId>
+                <version>0.12.6</version>
+            </dependency>
+            <dependency>
+                <groupId>com.smartops</groupId>
+                <artifactId>smart-ops-domain</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.smartops</groupId>
+                <artifactId>smart-ops-infrastructure</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.smartops</groupId>
+                <artifactId>smart-ops-agent-core</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.smartops</groupId>
+                <artifactId>smart-ops-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <!-- 全局依赖：所有子模块自动继承测试相关依赖 -->
+    <dependencies>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+                <!-- 编译插件：统一 Java 17 字节码 -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>${maven-compiler-plugin.version}</version>
+                    <configuration>
+                        <source>${java.version}</source>
+                        <target>${java.version}</target>
+                        <encoding>${project.build.sourceEncoding}</encoding>
+                        <parameters>true</parameters>
+                    </configuration>
+                </plugin>
+
+                <!-- 测试插件：支持 JUnit 5 -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <version>${maven-surefire-plugin.version}</version>
+                </plugin>
+
+                <!-- 覆盖率插件：行覆盖率 >= 95%，分支覆盖率 >= 90%
+                     agent.md 第六章 6.2 节强制要求（用户提升标准至 95%）。
+                     pluginManagement 中声明默认配置，子模块在 <plugins> 中引用即生效。 -->
+                <plugin>
+                    <groupId>org.jacoco</groupId>
+                    <artifactId>jacoco-maven-plugin</artifactId>
+                    <version>${jacoco-maven-plugin.version}</version>
+                    <executions>
+                        <execution>
+                            <id>prepare-agent</id>
+                            <goals>
+                                <goal>prepare-agent</goal>
+                            </goals>
+                        </execution>
+                        <execution>
+                            <id>report</id>
+                            <phase>test</phase>
+                            <goals>
+                                <goal>report</goal>
+                            </goals>
+                        </execution>
+                        <execution>
+                            <id>check</id>
+                            <phase>verify</phase>
+                            <goals>
+                                <goal>check</goal>
+                            </goals>
+                            <configuration>
+                                <rules>
+                                    <rule>
+                                        <element>BUNDLE</element>
+                                        <limits>
+                                            <limit>
+                                                <counter>LINE</counter>
+                                                <value>COVEREDRATIO</value>
+                                                <minimum>0.95</minimum>
+                                            </limit>
+                                            <limit>
+                                                <counter>BRANCH</counter>
+                                                <value>COVEREDRATIO</value>
+                                                <minimum>0.90</minimum>
+                                            </limit>
+                                        </limits>
+                                    </rule>
+                                </rules>
+                            </configuration>
+                        </execution>
+                    </executions>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+
+        <!-- 全局 plugins：所有子模块自动继承并执行 JaCoCo prepare-agent + report + check。
+             bootstrap 模块通过自身 <configuration><skip>true</skip></configuration> 跳过。 -->
+        <plugins>
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>

@@ -1,0 +1,41 @@
+# 开发环境配置
+# 本地开发使用，数据库连接指向本地 Docker Compose 启动的 MySQL/Redis。
+
+spring:
+  # MySQL 数据源 - 对应 agent.md 任务7
+  datasource:
+    url: jdbc:mysql://localhost:3306/smart_ops?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    username: root
+    # 密码走环境变量，本地默认值仅用于开发（对应 docker-compose.yml 的 MYSQL_ROOT_PASSWORD）
+    password: ${MYSQL_PASSWORD:root123}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  # JPA 配置
+  jpa:
+    # 开发环境自动建表，生产环境禁止使用
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQLDialect
+
+  # Redis - 对应 agent.md 任务7
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password: ""
+      timeout: 5s
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 4
+          min-idle: 0
+
+# 开发环境开启 SQL 日志
+logging:
+  level:
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
